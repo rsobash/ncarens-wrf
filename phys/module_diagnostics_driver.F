@@ -261,6 +261,12 @@ CONTAINS
                 ,U10=grid%u10,V10=grid%v10,W=grid%w_2                &
                 ,WSPD10MAX=grid%wspd10max                            &
                 ,UP_HELI_MAX=grid%up_heli_max                        &
+                ,UP_HELI_MIN=grid%up_heli_min                        &
+                ,C_PBLH=grid%c_pblh                                  &
+                ,T=grid%t_2,QV_CURR=moist(ims,kms,jms,P_QV)          &
+                ,P=grid%p,PB=grid%pb                                 &
+                ,HT=grid%ht                                          &
+                ,TH2=grid%th2,Q2=grid%q2,PSFC=grid%psfc              &
                 ,W_UP_MAX=grid%w_up_max,W_DN_MAX=grid%w_dn_max       &
                 ,ZNW=grid%znw,W_COLMEAN=grid%w_colmean               &
                 ,NUMCOLPTS=grid%numcolpts,W_MEAN=grid%w_mean         &
