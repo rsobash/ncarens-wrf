@@ -36,7 +36,7 @@ CONTAINS
       !  Pick up the number of members for each of the 4d arrays - for declaration purposes.
 
       USE module_state_description, ONLY: num_moist, num_chem, num_tracer, num_scalar, &
-                                          P_QG, P_QV,                                  &
+                                          P_QS, P_QI, P_QG, P_QV,                      &
                                           SKIP_PRESS_DIAGS
 
       USE module_driver_constants, ONLY: max_plevs
@@ -273,6 +273,12 @@ CONTAINS
                 ,GRPL_MAX=grid%grpl_max,GRPL_COLINT=grid%grpl_colint &
                 ,REFD_MAX=grid%refd_max                              &
                 ,refl_10cm=grid%refl_10cm                            &
+                ,LTG1_MAX=grid%ltg1_max,LTG2_MAX=grid%ltg2_max       &
+                ,LTG3_MAX=grid%ltg3_max                              &
+                ,LTG1=grid%ltg1,LTG2=grid%ltg2,LTG3=grid%ltg3        &
+                ,MSFT=grid%msft          &
+                ,QS_CURR=moist(ims,kms,jms,P_QS)                     &
+                ,QI_CURR=moist(ims,kms,jms,P_QI)                     &
                 ,QG_CURR=moist(ims,kms,jms,P_QG)                     &
                 ,RHO=grid%rho,PH=grid%ph_2,PHB=grid%phb,G=g          &
       ! Dimension arguments
@@ -284,8 +290,6 @@ CONTAINS
                 ,KTS=k_start, KTE=min(k_end,kde-1)                   &
                 ,NUM_TILES=grid%num_tiles                            &
                                                                     )
-
-
 
       !  Climate-oriented diagnostic quantities.
 

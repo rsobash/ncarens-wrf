@@ -46,7 +46,10 @@ CONTAINS
                      ,znw,w_colmean                                   &
                      ,numcolpts,w_mean                                &
                      ,grpl_max,grpl_colint,refd_max,refl_10cm         &
-                     ,qg_curr                                         &
+                     ,ltg1_max,ltg2_max,ltg3_max                      &
+                     ,ltg1,ltg2,ltg3                                  &
+                     ,msft                              &
+                     ,qs_curr,qi_curr,qg_curr                         &
                      ,rho,ph,phb,g                                    &
                                                                       )
 !----------------------------------------------------------------------
@@ -198,14 +201,15 @@ CONTAINS
 
    REAL, DIMENSION( ims:ime, kms:kme, jms:jme ), INTENT(IN) ::   &
                                                               w  &
-                                                       ,qg_curr  &
+                                       ,qs_curr,qi_curr,qg_curr  &
                                                            ,rho  &
                                                      ,refl_10cm  &
                                                         ,ph,phb
 
    REAL, DIMENSION( ims:ime, jms:jme ), INTENT(IN) ::            &
                                                             u10  &
-                                                           ,v10
+                                                           ,v10  &
+                                                          ,msft
 
    REAL, INTENT(IN) :: g
 
@@ -217,7 +221,9 @@ CONTAINS
                                     ,w_colmean,numcolpts,w_mean  &
                                           ,grpl_max,grpl_colint  &
                                                       ,refd_max  &
-                                                      ,c_pblh
+                                    ,ltg1_max,ltg2_max,ltg3_max  &
+                                                ,ltg1,ltg2,ltg3  &
+                                                       ,c_pblh
 ! NY vars
    REAL, DIMENSION( ims:ime, kms:kme, jms:jme ), INTENT(IN) :: t  &
                                                         ,qv_curr  &
@@ -235,6 +241,23 @@ CONTAINS
    REAL :: wind_vel
    REAL :: depth
 
+! Constants used in ltg threat calculations
+
+   REAL, PARAMETER    :: coef1=0.042*1000.*1.22
+   REAL, PARAMETER    :: coef2=0.20*1.22
+! McCAUL/CASE (3/8/2012) -- Change clim1 to reduce false alarms in threat1.
+!   REAL, PARAMETER    :: clim1=0.01*1.22
+   REAL, PARAMETER    :: clim1=1.50
+   REAL, PARAMETER    :: clim2=0.40*1.22
+   REAL, PARAMETER    :: clim3=0.02*1.22
+   REAL, PARAMETER    :: capa=0.28589641e0
+   INTEGER :: ithr1mx,jthr1mx,ithr2mx,jthr2mx
+   INTEGER :: ithr1,jthr1,ithr2,jthr2
+   REAL :: tval2,tval1
+   REAL :: thr1mx, thr2mx, thr1, thr2
+   REAL, PARAMETER  :: t0=273.15
+   ! RAS: made these two variables local so we wouldn't pass them from solve
+   REAL, DIMENSION( ims:ime , jms:jme ) :: totice_colint,ltg1_calc
 !-----------------------------------------------------------------
 ! Handle accumulations with buckets to prevent round-off truncation in long runs
 ! This is done every 360 minutes assuming time step fits exactly into 360 minutes
@@ -439,6 +462,9 @@ CONTAINS
          w_mean(i,j)      = 0.
          grpl_max(i,j)    = 0.
          refd_max(i,j)    = 0.
+         ltg1_max(i,j)    = 0.
+         ltg2_max(i,j)    = 0.
+         ltg3_max(i,j)    = 0.
          c_pblh(i,j)      = 0.         
        ENDDO
        ENDDO
@@ -457,6 +483,9 @@ CONTAINS
        w_colmean(i,j)   = 0.
        numcolpts(i,j)   = 0.
        grpl_colint(i,j) = 0.
+       totice_colint(i,j) = 0.
+       ltg1_calc(i,j) = 0
+
      ENDDO
      ENDDO
    ENDDO
@@ -504,6 +533,36 @@ CONTAINS
        depth = ( ( ph(i,k+1,j) + phb(i,k+1,j) ) / g ) - &
                ( ( ph(i,k  ,j) + phb(i,k  ,j) ) / g )
        grpl_colint(i,j) = grpl_colint(i,j) + qg_curr(i,k,j) * depth * rho(i,k,j)
+
+       totice_colint(i,j) = totice_colint(i,j) + ( qi_curr(i,k,j) + \
+                            qs_curr(i,k,j) + qg_curr(i,k,j) ) * \
+                            depth * rho(i,k,j)
+
+!       IF ( k .GT. 2 .AND. ltg1_calc(i,j) .EQ. 0 ) THEN
+       IF ( ltg1_calc(i,j) .EQ. 0 ) THEN
+         tval1 = (t(i,k,j)+t0)* \
+                 ((p(i,k,j)+pb(i,k,j))*1.e-5)**capa
+         tval2 = (t(i,k+1,j)+t0)* \
+                 ((p(i,k+1,j)+pb(i,k+1,j))*1.e-5)**capa
+
+!         tval1 = (t(i,k,j)+300.)* \
+!                 ((p(i,k,j)+pb(i,k,j))*1.e-5)**capa
+!         tval2 = (t(i,k+1,j)+300.)* \
+!                 ((p(i,k+1,j)+pb(i,k+1,j))*1.e-5)**capa
+
+         IF ( ((tval1+tval2)*0.5) .LT. 258.15 ) THEN
+           ltg1_calc(i,j) = 1
+
+           ltg1(i,j) = coef1*w(i,k,j)* \
+             ((qg_curr(i,k,j)+qg_curr(i,k+1,j))*0.5)/msft(i,j)
+           IF ( ltg1(i,j) .LT. clim1 ) ltg1(i,j) = 0.
+
+           IF ( ltg1(i,j) .GT. ltg1_max(i,j) ) THEN
+             ltg1_max(i,j) = ltg1(i,j)
+           ENDIF
+         ENDIF
+       ENDIF
+
      ENDDO
      ENDDO
      ENDDO
@@ -577,6 +636,109 @@ CONTAINS
        IF ( refl_10cm(i,kms,j) .GT. refd_max(i,j) ) THEN
          refd_max(i,j) = refl_10cm(i,kms,j)
        ENDIF
+
+! Calculate the max lightning threat 2
+
+       ltg2(i,j) = coef2 * totice_colint(i,j) / msft(i,j)
+       IF ( ltg2(i,j) .LT. clim2 ) ltg2(i,j) = 0.
+
+       IF ( ltg2(i,j) .GT. ltg2_max(i,j) ) THEN
+          ltg2_max(i,j) = ltg2(i,j)
+       ENDIF
+
+     ENDDO
+     ENDDO
+   ENDDO
+!  !$OMP END PARALLEL DO
+
+! Calculate the max lightning threat 3 -- max values for
+! lightning threats 1 and 2 must be determined first
+
+! Make the calculation for the instantaneous lightning
+! threat fields as well
+
+!  !$OMP PARALLEL DO   &
+!  !$OMP PRIVATE ( ij )
+   thr1mx = 0.
+   thr2mx = 0.
+   thr1   = 0.
+   thr2   = 0.
+   DO ij = 1 , num_tiles
+     DO j=j_start(ij),j_end(ij)
+     DO i=i_start(ij),i_end(ij)
+       IF ( ltg1_max(i,j) .GT. thr1mx ) THEN
+         thr1mx = ltg1_max(i,j)
+         ithr1mx = i
+         jthr1mx = j
+       ENDIF
+
+       IF ( ltg2_max(i,j) .GT. thr2mx ) THEN
+         thr2mx = ltg2_max(i,j)
+         ithr2mx = i
+         jthr2mx = j
+       ENDIF
+
+       IF ( ltg1(i,j) .GT. thr1 ) THEN
+         thr1 = ltg1(i,j)
+         ithr1 = i
+         jthr1 = j
+       ENDIF
+
+       IF ( ltg2(i,j) .GT. thr2 ) THEN
+         thr2 = ltg2(i,j)
+         ithr2 = i
+         jthr2 = j
+       ENDIF
+     ENDDO
+     ENDDO
+   ENDDO
+!  !$OMP END PARALLEL DO
+
+! Compute global MAX
+
+   CALL wrf_dm_maxval ( thr1mx, ithr1mx, jthr1mx )
+   CALL wrf_dm_maxval ( thr2mx, ithr2mx, jthr2mx )
+   CALL wrf_dm_maxval ( thr1,   ithr1,   jthr1   )
+   CALL wrf_dm_maxval ( thr2,   ithr2,   jthr2   )
+
+! Now calculate the max and instantaneous lightning threat 3
+
+!  !$OMP PARALLEL DO   &
+!  !$OMP PRIVATE ( ij )
+   DO ij = 1 , num_tiles
+     DO j=j_start(ij),j_end(ij)
+     DO i=i_start(ij),i_end(ij)
+!       IF ( thr1mx .GT. 0. ) THEN
+!         ltg3_max(i,j) = 0.95 * ltg1_max(i,j) * ( thr2mx / thr1mx ) + &
+!                         0.05 * ltg2_max(i,j)
+!       ELSE
+!         ltg3_max(i,j) = 0.05 * ltg2_max(i,j)
+!       ENDIF
+
+       IF ( thr2mx .GT. 0. ) THEN
+         ltg3_max(i,j) = 0.95 * ltg1_max(i,j) + &
+                         0.05 * ltg2_max(i,j) * ( thr1mx / thr2mx )
+       ELSE
+         ltg3_max(i,j) = 0.95 * ltg1_max(i,j)
+       ENDIF
+
+       IF ( ltg3_max(i,j) .LT. clim3 ) ltg3_max(i,j) = 0.
+
+!       IF ( thr1 .GT. 0. ) THEN
+!         ltg3(i,j) = 0.95 * ltg1(i,j) * ( thr2 / thr1 ) + &
+!                     0.05 * ltg2(i,j)
+!       ELSE
+!         ltg3(i,j) = 0.05 * ltg2(i,j)
+!       ENDIF
+
+       IF ( thr2 .GT. 0. ) THEN
+         ltg3(i,j) = 0.95 * ltg1(i,j) + &
+                     0.05 * ltg2(i,j) * ( thr1 / thr2 )
+       ELSE
+         ltg3(i,j) = 0.95 * ltg1(i,j)
+       ENDIF
+
+       IF ( ltg3(i,j) .LT. clim3 ) ltg3(i,j) = 0.
      ENDDO
      ENDDO
    ENDDO
