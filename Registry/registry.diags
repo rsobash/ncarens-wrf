@@ -30,7 +30,7 @@ state    real   ght_pl i{np}j   misc    1  Z   h{23}  "GHT_PL"  "Pressure level 
 state    real   s_pl   i{np}j   misc    1  Z   h{23}  "S_PL"    "Pressure level data, Speed"                 "m s-1"
 state    real   td_pl  i{np}j   misc    1  Z   h{23}  "TD_PL"   "Pressure level data, Dew point temperature" "K"
 state    real   q_pl   i{np}j   misc    1  Z   h{23}  "Q_PL"    "Pressure level data, Mixing ratio"          "kg/kg"
-state    real   rvort_pl i{np}j   misc    1  Z   h{23}  "RVORT_PL"    "Pressure level data, Relative vorticity" "s-1"
+state    real   avort_pl i{np}j   misc    1  Z   h{23}  "AVORT_PL"    "Pressure level data, Absolute vorticity" "10^-5 s-1"
 
 #  Package declarations
 

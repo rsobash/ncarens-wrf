@@ -412,7 +412,7 @@ CONTAINS
                       ,s_pl  = grid%s_pl                                    &
                       ,td_pl = grid%td_pl                                   &
                       ,q_pl = grid%q_pl                                     &
-                      ,rvort_pl = grid%rvort_pl                             &
+                      ,avort_pl = grid%avort_pl                             &
                !  Dimension arguments
                       ,IDS=ids,IDE=ide, JDS=jds,JDE=jde, KDS=kds,KDE=kde    &
                       ,IMS=ims,IME=ime, JMS=jms,JME=jme, KMS=kms,KME=kme    &

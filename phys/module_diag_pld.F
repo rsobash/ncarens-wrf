@@ -17,7 +17,7 @@ CONTAINS
                     use_tot_or_hyd_p,extrap_below_grnd,missing,     &  
                     num_press_levels,max_press_levels,press_levels, &
                     p_pl,u_pl,v_pl,t_pl,rh_pl,ght_pl,s_pl,td_pl,    &
-                    q_pl,rvort_pl,                                  &
+                    q_pl,avort_pl,                                  &
                     ids,ide, jds,jde, kds,kde,                      &
                     ims,ime, jms,jme, kms,kme,                      &
                     its,ite, jts,jte, kts,kte                       )
@@ -44,7 +44,7 @@ CONTAINS
       !  Output variables
    
       REAL   , INTENT(  OUT) ,  DIMENSION(num_press_levels)                     :: p_pl
-      REAL   , INTENT(  OUT) ,  DIMENSION(ims:ime , num_press_levels , jms:jme) :: u_pl,v_pl,t_pl,rh_pl,ght_pl,s_pl,td_pl,q_pl,rvort_pl
+      REAL   , INTENT(  OUT) ,  DIMENSION(ims:ime , num_press_levels , jms:jme) :: u_pl,v_pl,t_pl,rh_pl,ght_pl,s_pl,td_pl,q_pl,avort_pl
    
       !  Local variables
    
@@ -62,7 +62,7 @@ CONTAINS
                  qu, qd     , &
                  eu, ed, em , &
                  du, dd     , &
-              rvort_u, rvort_d
+              avort_u, avort_d
       REAL    :: es, qs
       REAL    :: part, gammas, tvu, tvd
       REAL    :: dsx, dsy, mm, dudy, dvdx, dx, dy
@@ -85,6 +85,7 @@ CONTAINS
                ght_pl(i,kp,j) = missing
                s_pl  (i,kp,j) = missing
                td_pl (i,kp,j) = missing
+               avort_pl (i,kp,j) = missing
             END DO
          END DO
       END DO
@@ -199,21 +200,19 @@ CONTAINS
 
                      ! 8. Relative Vorticity
 
-                     jp1 = MIN(j+1, MIN(jte,jde-1))
-                     jm1 = MIN(j-1, 1)
-                     ip1 = MIN(i+1, MIN(ite,ide-1))
+                     jp1 = MIN(j+1, jme)
+                     jm1 = MAX(j-1, 1)
+                     ip1 = MIN(i+1, ime)
                      im1 = MAX(i-1, 1)
                      dsx = (ip1-im1)*dx
                      dsy = (jp1-jm1)*dy
                      mm  = msftx(i,j)*msftx(i,j)
 
-                     dudy = 0.5*(u(i,ke,jp1)/msfux(i,jp1) + u(i+1,ke,jp1)/msfux(i+1,jp1)  &
-                               - u(i,ke,jm1)/msfux(i,jm1) + u(i+1,ke,jm1)/msfux(i+1,jm1))/dsy*mm
-                     dvdx = 0.5*(v(ip1,ke,j)/msfvy(ip1,j) + v(ip1,ke,j+1)/msfvy(ip1,j+1)  &
-                               - v(im1,ke,j)/msfvy(im1,j) + v(im1,ke,j+1)/msfvy(im1,j+1))/dsx*mm
-                     rvort_d = dvdx - dudy
-
-                     rvort_pl(i,kp,j) = (rvort_u * (pm-pd) + rvort_d * (pu-pm) ) / (pu-pd)
+                     dudy = 0.5*(u(i,ke,jp1)/msfuy(i,jp1) + u(i+1,ke,jp1)/msfuy(i+1,jp1)  &
+                               - u(i,ke,jm1)/msfuy(i,jm1) - u(i+1,ke,jm1)/msfuy(i+1,jm1))/(dsy*mm)
+                     dvdx = 0.5*(v(ip1,ke,j)/msfvx(ip1,j) + v(ip1,ke,j+1)/msfvx(ip1,j+1)  &
+                               - v(im1,ke,j)/msfvx(im1,j) - v(im1,ke,j+1)/msfvx(im1,j+1))/(dsx*mm)
+                     avort_pl(i,kp,j) = 1.0E5*(dvdx - dudy + f(i,j))
 
                      EXIT ke_loop_half
                   ELSEIF ( ( pd .GE. pm ) .AND. &
@@ -273,27 +272,27 @@ CONTAINS
   
                      !  7. Relative vorticity
    
-                     jp1 = MIN(j+1, MIN(jte,jde-1))
-                     jm1 = MIN(j-1, 1)
-                     ip1 = MIN(i+1, MIN(ite,ide-1))
+                     jp1 = MIN(j+1, jme)
+                     jm1 = MAX(j-1, 1)
+                     ip1 = MIN(i+1, ime)
                      im1 = MAX(i-1, 1)
                      dsx = (ip1-im1)*dx
                      dsy = (jp1-jm1)*dy
                      mm  = msftx(i,j)*msftx(i,j)
 
                      dudy = 0.5*(u(i,ke+1,jp1)/msfuy(i,jp1) + u(i+1,ke+1,jp1)/msfuy(i+1,jp1)  &
-                               - u(i,ke+1,jm1)/msfuy(i,jm1) + u(i+1,ke+1,jm1)/msfuy(i+1,jm1))/dsy*mm
+                               - u(i,ke+1,jm1)/msfuy(i,jm1) - u(i+1,ke+1,jm1)/msfuy(i+1,jm1))/(dsy*mm)
                      dvdx = 0.5*(v(ip1,ke+1,j)/msfvx(ip1,j) + v(ip1,ke+1,j+1)/msfvx(ip1,j+1)  &
-                               - v(im1,ke+1,j)/msfvx(im1,j) + v(im1,ke+1,j+1)/msfvx(im1,j+1))/dsx*mm
-                     rvort_u = dvdx - dudy
+                               - v(im1,ke+1,j)/msfvx(im1,j) - v(im1,ke+1,j+1)/msfvx(im1,j+1))/(dsx*mm)
+                     avort_u = 1.0E5*(dvdx - dudy + f(i,j))
                      
-                     dudy = 0.5*(u(i,ke,jp1)/msfux(i,jp1) + u(i+1,ke,jp1)/msfux(i+1,jp1)  &
-                               - u(i,ke,jm1)/msfux(i,jm1) + u(i+1,ke,jm1)/msfux(i+1,jm1))/dsy*mm
-                     dvdx = 0.5*(v(ip1,ke,j)/msfvy(ip1,j) + v(ip1,ke,j+1)/msfvy(ip1,j+1)  &
-                               - v(im1,ke,j)/msfvy(im1,j) + v(im1,ke,j+1)/msfvy(im1,j+1))/dsx*mm
-                     rvort_d = dvdx - dudy
+                     dudy = 0.5*(u(i,ke,jp1)/msfuy(i,jp1) + u(i+1,ke,jp1)/msfuy(i+1,jp1)  &
+                               - u(i,ke,jm1)/msfuy(i,jm1) - u(i+1,ke,jm1)/msfuy(i+1,jm1))/(dsy*mm)
+                     dvdx = 0.5*(v(ip1,ke,j)/msfvx(ip1,j) + v(ip1,ke,j+1)/msfvx(ip1,j+1)  &
+                               - v(im1,ke,j)/msfvx(im1,j) - v(im1,ke,j+1)/msfvx(im1,j+1))/(dsx*mm)
+                     avort_d = 1.0E5*(dvdx - dudy + f(i,j))
 
-                     rvort_pl(i,kp,j) = (rvort_u * (pm-pd) + rvort_d * (pu-pm) ) / (pu-pd)
+                     avort_pl(i,kp,j) = (avort_u * (pm-pd) + avort_d * (pu-pm) ) / (pu-pd)
  
                      !em = qm * pm * 0.01 / ( eps + qm )                                       ! water vapor pressure at the level.
                      !es = s3 * exp( s2 * (t_pl(i,kp,j) - t_kelvin)/(t_pl(i,kp,j) - s4) )      ! sat vapor pressure over liquid water in mb.
