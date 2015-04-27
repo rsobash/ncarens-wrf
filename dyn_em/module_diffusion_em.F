@@ -6029,8 +6029,9 @@ END SUBROUTINE phy_bc
 
     END SUBROUTINE compute_diff_metrics
 
-    SUBROUTINE cal_helicity ( config_flags, u, v, w, uh, up_heli_max,&
-                                   up_heli_min,                      &
+    SUBROUTINE cal_helicity ( config_flags, u, v, w, uh, uh03, rvort1, up_heli_max,&
+                                   up_heli_min, up_heli_max03,       &
+                                   rvort1_max,                       &
                                    ph, phb,                          &
                                    msfux, msfuy,                     &
                                    msfvx, msfvy,                     &
@@ -6077,7 +6078,7 @@ END SUBROUTINE phy_bc
     ::  u, v, w, ph, phb, zx, zy, rdz, rdzw
 
     REAL, DIMENSION( ims:ime, jms:jme ), INTENT( INOUT )  &
-    :: uh, up_heli_max, up_heli_min
+    :: uh, uh03, rvort1, up_heli_max, up_heli_min, up_heli_max03, rvort1_max
 
 ! Local variables.
 
@@ -6099,7 +6100,7 @@ END SUBROUTINE phy_bc
     :: wavg, rvort
 
     LOGICAL, DIMENSION( its-3:ite+2, jts-3:jte+2 )  &
-    :: use_column
+    :: use_column, use_column03
 
 ! End declarations.
 !-----------------------------------------------------------------------
@@ -6311,6 +6312,7 @@ END SUBROUTINE phy_bc
 ! End addition of the second parenthetical term to updraft helicity.
 !-----------------------------------------------------------------------
 
+
 !-----------------------------------------------------------------------
 ! Update the boundary for the vorticity.
 
@@ -6375,7 +6377,10 @@ END SUBROUTINE phy_bc
     DO j = j_start, j_end
     DO i = i_start, i_end
       use_column(i,j) = .true.
+      use_column03(i,j) = .true.
       uh(i,j) = 0.
+      uh03(i,j) = 0.
+      rvort1(i,j) = 0.
     END DO
     END DO
 
@@ -6407,6 +6412,29 @@ END SUBROUTINE phy_bc
           uh(i,j) = 0.
         ENDIF
       ENDIF
+
+      IF ( zl .GE. 0. .AND. zu .LE. 3000. ) THEN
+        IF ( wavg(i,k,j) .GT. 0. .AND. wavg(i,k+1,j) .GT. 0. ) THEN
+          uh03(i,j) = uh03(i,j) + ( ( wavg(i,k,j) * rvort(i,k,j) + &
+                    wavg(i,k+1,j) * rvort(i,k+1,j) ) * 0.5 ) &
+                    * ( zu - zl )
+        ELSE
+          use_column03(i,j) = .false.
+          uh03(i,j) = 0.
+        ENDIF
+      ENDIF
+
+     ! ---
+     ! Add code here to compute hourly-max 1km vorticity
+     IF (zl .LE. 1000. .AND. zu .GE. 1000.) THEN
+        !rvort1(i,j) = (rvort(i,k,j) + rvort(i,k+1,j))*0.5
+        rvort1(i,j) = rvort(i,k,j) + (rvort(i,k+1,j) - rvort(i,k,j))*((1000-zl)/(zu-zl))
+        IF ( rvort1(i,j) .GT. rvort1_max(i,j) ) THEN
+           rvort1_max(i,j) = rvort1(i,j)
+        ENDIF
+     ENDIF
+     !---
+
     END DO
     END DO
     END DO
@@ -6432,6 +6460,23 @@ END SUBROUTINE phy_bc
 !     IF ( up_heli_max(i,j) .GT. 1.0e+3 ) THEN
 !       print *,' i,j,up_heli_max = ', i,j,up_heli_max(i,j)
 !     ENDIF
+    END DO
+    END DO
+
+    DO j = MAX(jds+1,jts),MIN(jde-2,jte)
+    DO i = MAX(ids+1,its),MIN(ide-2,ite)
+      uh_smth = 0.25   *   uh03(i  ,j  ) + &
+                0.125  * ( uh03(i+1,j  ) + uh03(i-1,j  ) + &
+                           uh03(i  ,j+1) + uh03(i  ,j-1) ) + &
+                0.0625 * ( uh03(i+1,j+1) + uh03(i+1,j-1) + &
+                           uh03(i-1,j+1) + uh03(i-1,j-1) )
+
+      IF ( use_column03(i,j) ) THEN
+        IF ( uh_smth .GT. up_heli_max03(i,j) ) THEN
+           up_heli_max03(i,j) = uh_smth
+        ENDIF
+      ENDIF
+
     END DO
     END DO
 
