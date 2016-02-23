@@ -1692,6 +1692,8 @@ state    real    LTG1             ij     misc        1         -     -          
 state    real    LTG2             ij     misc        1         -     -           "LTG2"           "LTG THREAT 2"            "flashes km-2 5min-1"
 state    real    LTG3             ij     misc        1         -     -           "LTG3"           "LTG THREAT 3"            "flashes km-2 5min-1"
 i1       integer LTG1_CALC        ij     misc        1         -     -           "LTG1_CALC"      "LTG1 CALCULATED T OR F"  "dimensionless"
+state    real    HAIL_MAXK1       ij     misc        1         -      rh02       "HAIL_MAXK1"     "MAX HAIL DIAMETER K=1"   "m"
+state    real    HAIL_MAX2D       ij     misc        1         -      rh02       "HAIL_MAX2D"     "MAX HAIL DIAMETER ENTIRE COLUMN"   "m"
 
 state   real    max_cfl         -       misc        1         -     -       "max_cfl"           "maximum CFL value in grid at a time" "-"
 
@@ -2535,7 +2537,7 @@ package   weno_scalar    moist_adv_opt==3            -             -
 package   wenopd_scalar  moist_adv_opt==4            -             -
 
 package   maxmin_output  output_diagnostics==1            -    state:t2min,t2max,tt2min,tt2max,t2mean,t2std,q2min,q2max,tq2min,tq2max,q2mean,q2std,skintempmin,skintempmax,tskintempmin,tskintempmax,skintempmean,skintempstd,u10max,v10max,spduv10max,tspduv10max,u10mean,v10mean,spduv10mean,u10std,v10std,spduv10std,raincvmax,rainncvmax,traincvmax,trainncvmax,raincvmean,rainncvmean,raincvstd,rainncvstd
-package   nwp_output     nwp_diagnostics==1            -       state:wspd10max,w_up_max,w_dn_max,up_heli_max,up_heli_min,up_heli_max03,rvort1_max,w_mean,grpl_max,c_pblh
+package   nwp_output     nwp_diagnostics==1            -       state:wspd10max,w_up_max,w_dn_max,up_heli_max,up_heli_min,up_heli_max03,rvort1_max,w_mean,grpl_max,c_pblh,hail_maxk1,hail_max2d
 
 package   dfi_setup      dfi_stage==0                -             -
 package   dfi_bck        dfi_stage==1                -             -
