@@ -247,7 +247,7 @@ CONTAINS
 
 ! Constants used in ltg threat calculations
 
-   REAL, PARAMETER    :: coef1=0.042*1000.*1.22
+   REAL, PARAMETER    :: coef1=0.042*1000.*1.22*20.0 ! 29 April change from 100.0 to 20.0 !GSR extra 100.0
    REAL, PARAMETER    :: coef2=0.20*1.22
 ! McCAUL/CASE (3/8/2012) -- Change clim1 to reduce false alarms in threat1.
 !   REAL, PARAMETER    :: clim1=0.01*1.22
@@ -708,6 +708,7 @@ CONTAINS
    CALL wrf_dm_maxval ( thr2,   ithr2,   jthr2   )
 
 ! Now calculate the max and instantaneous lightning threat 3
+! 06 april 2015:GSR change from 95% --> 90% and 5% --> 10%
 
 !  !$OMP PARALLEL DO   &
 !  !$OMP PRIVATE ( ij )
@@ -722,10 +723,10 @@ CONTAINS
 !       ENDIF
 
        IF ( thr2mx .GT. 0. ) THEN
-         ltg3_max(i,j) = 0.95 * ltg1_max(i,j) + &
-                         0.05 * ltg2_max(i,j) * ( thr1mx / thr2mx )
+         ltg3_max(i,j) = 0.90 * ltg1_max(i,j) + &
+                         0.10 * ltg2_max(i,j) * ( thr1mx / thr2mx )
        ELSE
-         ltg3_max(i,j) = 0.95 * ltg1_max(i,j)
+         ltg3_max(i,j) = 0.90 * ltg1_max(i,j)
        ENDIF
 
        IF ( ltg3_max(i,j) .LT. clim3 ) ltg3_max(i,j) = 0.
@@ -738,10 +739,10 @@ CONTAINS
 !       ENDIF
 
        IF ( thr2 .GT. 0. ) THEN
-         ltg3(i,j) = 0.95 * ltg1(i,j) + &
-                     0.05 * ltg2(i,j) * ( thr1 / thr2 )
+         ltg3(i,j) = 0.90 * ltg1(i,j) + &
+                     0.10 * ltg2(i,j) * ( thr1 / thr2 )
        ELSE
-         ltg3(i,j) = 0.95 * ltg1(i,j)
+         ltg3(i,j) = 0.90 * ltg1(i,j)
        ENDIF
 
        IF ( ltg3(i,j) .LT. clim3 ) ltg3(i,j) = 0.
