@@ -53,6 +53,7 @@ CONTAINS
                      ,rvort1_max                                      &
                      ,c_pblh,t,qv_curr,p,pb,ht,th2,q2,psfc            & ! NY PBL
                      ,w_up_max,w_dn_max                               &
+                     ,w_1km_agl                                       &
                      ,znw,w_colmean                                   &
                      ,numcolpts,w_mean                                &
                      ,grpl_max,grpl_colint,refd_max,refl_10cm         &
@@ -254,7 +255,8 @@ CONTAINS
                                                       ,refd_max  &
                                     ,ltg1_max,ltg2_max,ltg3_max  &
                                                 ,ltg1,ltg2,ltg3  &
-                                                       ,c_pblh
+                                                       ,c_pblh   &
+                                                     ,w_1km_agl
 ! NY vars
    REAL, DIMENSION( ims:ime, kms:kme, jms:jme ), INTENT(IN) :: t  &
                                                         ,qv_curr  &
@@ -272,6 +274,7 @@ CONTAINS
 
    REAL :: wind_vel
    REAL :: depth
+   REAL :: zl, zu
 
 ! Constants used in ltg threat calculations
 
@@ -537,6 +540,7 @@ CONTAINS
        grpl_colint(i,j) = 0.
        totice_colint(i,j) = 0.
        ltg1_calc(i,j) = 0
+       w_1km_agl(i,j) = 0.
 
      ENDDO
      ENDDO
@@ -567,6 +571,17 @@ CONTAINS
          w_colmean(i,j) = w_colmean(i,j) + w(i,k,j)
          numcolpts(i,j) = numcolpts(i,j) + 1
        ENDIF
+
+       !-- compute vertical velocity at 1km AGL --!
+       zl   = ( ( ph(i,k,j) + phb(i,k,j) ) / g - ht(i,j) )
+       zu   = ( ( ph(i,k+1,j) + phb(i,k+1,j) ) / g - ht(i,j) )
+       IF ( zl .LE. 1000.0 .AND. zu .GE. 1000.0 ) THEN
+           w_1km_agl(i,j) = w(i,k,j) + (w(i,k+1,j) - w(i,k,j))*((1000-zl)/(zu-zl))
+           ! refl not on z levels so this uses refl at half levels...should fix?
+           !refl_1km_agl(i,j) = refl_10cm(i,k,j) + (refl_10cm(i,k+1,j) - &
+           !                   refl_10cm(i,k,j))*((1000-zl)/(zu-zl))
+       ENDIF
+
      ENDDO
      ENDDO
      ENDDO

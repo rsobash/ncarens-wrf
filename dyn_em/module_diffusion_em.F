@@ -6029,8 +6029,9 @@ END SUBROUTINE phy_bc
 
     END SUBROUTINE compute_diff_metrics
 
-    SUBROUTINE cal_helicity ( config_flags, u, v, w, uh, uh03, rvort1, up_heli_max,&
+    SUBROUTINE cal_helicity ( config_flags, u, v, w, uh, uh03, uh01, rvort1, up_heli_max,&
                                    up_heli_min, up_heli_max03,       &
+                                   up_heli_max01,                    &
                                    rvort1_max,                       &
                                    ph, phb,                          &
                                    msfux, msfuy,                     &
@@ -6078,7 +6079,8 @@ END SUBROUTINE phy_bc
     ::  u, v, w, ph, phb, zx, zy, rdz, rdzw
 
     REAL, DIMENSION( ims:ime, jms:jme ), INTENT( INOUT )  &
-    :: uh, uh03, rvort1, up_heli_max, up_heli_min, up_heli_max03, rvort1_max
+    :: uh, uh03, uh01, rvort1, up_heli_max, up_heli_min, up_heli_max03, &
+       up_heli_max01, rvort1_max
 
 ! Local variables.
 
@@ -6100,7 +6102,7 @@ END SUBROUTINE phy_bc
     :: wavg, rvort
 
     LOGICAL, DIMENSION( its-3:ite+2, jts-3:jte+2 )  &
-    :: use_column, use_column03
+    :: use_column, use_column03, use_column01
 
 ! End declarations.
 !-----------------------------------------------------------------------
@@ -6378,8 +6380,10 @@ END SUBROUTINE phy_bc
     DO i = i_start, i_end
       use_column(i,j) = .true.
       use_column03(i,j) = .true.
+      use_column01(i,j) = .true.
       uh(i,j) = 0.
       uh03(i,j) = 0.
+      uh01(i,j) = 0.
       rvort1(i,j) = 0.
     END DO
     END DO
@@ -6421,6 +6425,17 @@ END SUBROUTINE phy_bc
         ELSE
           use_column03(i,j) = .false.
           uh03(i,j) = 0.
+        ENDIF
+      ENDIF
+      
+      IF ( zl .GE. 0. .AND. zu .LE. 1000. ) THEN
+        IF ( wavg(i,k,j) .GT. 0. .AND. wavg(i,k+1,j) .GT. 0. ) THEN
+          uh01(i,j) = uh01(i,j) + ( ( wavg(i,k,j) * rvort(i,k,j) + &
+                    wavg(i,k+1,j) * rvort(i,k+1,j) ) * 0.5 ) &
+                    * ( zu - zl )
+        ELSE
+          use_column01(i,j) = .false.
+          uh01(i,j) = 0.
         ENDIF
       ENDIF
 
@@ -6474,6 +6489,23 @@ END SUBROUTINE phy_bc
       IF ( use_column03(i,j) ) THEN
         IF ( uh_smth .GT. up_heli_max03(i,j) ) THEN
            up_heli_max03(i,j) = uh_smth
+        ENDIF
+      ENDIF
+
+    END DO
+    END DO
+    
+    DO j = MAX(jds+1,jts),MIN(jde-2,jte)
+    DO i = MAX(ids+1,its),MIN(ide-2,ite)
+      uh_smth = 0.25   *   uh01(i  ,j  ) + &
+                0.125  * ( uh01(i+1,j  ) + uh01(i-1,j  ) + &
+                           uh01(i  ,j+1) + uh01(i  ,j-1) ) + &
+                0.0625 * ( uh01(i+1,j+1) + uh01(i+1,j-1) + &
+                           uh01(i-1,j+1) + uh01(i-1,j-1) )
+
+      IF ( use_column01(i,j) ) THEN
+        IF ( uh_smth .GT. up_heli_max01(i,j) ) THEN
+           up_heli_max01(i,j) = uh_smth
         ENDIF
       ENDIF
 
