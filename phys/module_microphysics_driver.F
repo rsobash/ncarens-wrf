@@ -73,6 +73,7 @@ SUBROUTINE microphysics_driver(                                          &
 #endif
                       ,qnwfa2d                                           & ! for water/ice-friendly aerosols
                       ,refl_10cm                                         & ! HM, 9/22/09, add for refl
+                      ,grid_clock,grid_alarms                            &
 ! YLIN
 ! Added the RI_CURR array to the call
                       ,ri_curr                                           &
@@ -479,6 +480,11 @@ REAL, DIMENSION( ims:ime, kms:kme, jms:jme ),                        &
    REAL, DIMENSION( ims:ime, jms:jme ),                           &
          OPTIONAL,                                                &
          INTENT(IN) :: mu
+
+   TYPE (WRFU_Clock), OPTIONAL :: grid_clock
+   TYPE (WRFU_Alarm), OPTIONAL, POINTER :: grid_alarms(:)
+
+
 ! YLIN
 ! Added RI_CURR similar to microphysics fields above
    REAL, DIMENSION( ims:ime, kms:kme, jms:jme ),                  &
@@ -534,6 +540,13 @@ REAL, DIMENSION( ims:ime, kms:kme, jms:jme ),                        &
    INTEGER :: i,j,k,its,ite,jts,jte,ij,sz,n
    LOGICAL :: channel
    REAL    :: z0, z1, z2, w1, w2
+
+   LOGICAL :: full_melti
+   
+   full_melti=.false.
+   IF ( Is_alarm_tstep(grid_clock,grid_alarms(HISTORY_ALARM)) ) THEN
+     full_melti=.true.
+   ENDIF
 
 !---------------------------------------------------------------------
 !  check for microphysics type.  We need a clean way to
@@ -714,6 +727,7 @@ REAL, DIMENSION( ims:ime, kms:kme, jms:jme ),                        &
 #endif
                      REFL_10CM=refl_10cm,                &
                      diagflag=diagflag,                  &
+                     FULL_MELTI=full_melti,              &
                      do_radar_ref=do_radar_ref,          &
                      re_cloud=re_cloud,                  &
                      re_ice=re_ice,                      &
@@ -772,6 +786,7 @@ REAL, DIMENSION( ims:ime, kms:kme, jms:jme ),                        &
 #endif
                      REFL_10CM=refl_10cm,                &
                      diagflag=diagflag,                  &
+                     FULL_MELTI=full_melti,              &
                      do_radar_ref=do_radar_ref,          &
                      re_cloud=re_cloud,                  & ! G. Thompson
                      re_ice=re_ice,                      & ! G. Thompson

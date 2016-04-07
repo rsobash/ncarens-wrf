@@ -285,7 +285,7 @@ SUBROUTINE solve_em ( grid , config_flags  &
 ! Set diagnostic flag value history output time
 !-----------------------------------------------------------------------------
 !  if ( Is_alarm_tstep(grid_clock, grid_alarms(HISTORY_ALARM)) ) then
-      diag_flag = .false.
+      diag_flag = .true.
    if ( Is_alarm_tstep(grid%domain_clock, grid%alarms(HISTORY_ALARM)) ) then
       diag_flag = .true.
    endif
@@ -3452,6 +3452,7 @@ BENCH_START(micro_driver_tim)
       &        , has_reqc=grid%has_reqc, has_reqi=grid%has_reqi, has_reqs=grid%has_reqs & ! G. Thompson
       &        , qnwfa2d=grid%qnwfa2d                                                   & ! G. Thompson
       &        , diagflag=diag_flag, do_radar_ref=config_flags%do_radar_ref &
+      &        , grid_clock=grid%domain_clock, grid_alarms=grid%alarms &
       &        ,u=grid%u_phy,v=grid%v_phy &
       &        ,scalar=scalar,num_scalar=num_scalar                             &
       &        ,TH_OLD=grid%th_old                                        &

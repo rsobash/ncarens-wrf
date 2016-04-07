@@ -999,6 +999,9 @@
                               rainprod, evapprod, &
 #endif
                               refl_10cm, diagflag, do_radar_ref,      &
+! SRD
+                              full_melti, &
+! SRD
                               re_cloud, re_ice, re_snow,              &
                               has_reqc, has_reqi, has_reqs,           &
                               ids,ide, jds,jde, kds,kde, &             ! domain dims
@@ -1031,6 +1034,9 @@
                           SNOWNC, SNOWNCV, GRAUPELNC, GRAUPELNCV
       REAL, DIMENSION(ims:ime, kms:kme, jms:jme), INTENT(INOUT)::       &
                           refl_10cm
+! SRD
+      LOGICAL, INTENT(IN) :: full_melti
+! SRD
       REAL, INTENT(IN):: dt_in
       INTEGER, INTENT(IN):: itimestep
 
@@ -1298,8 +1304,13 @@
 
          IF ( PRESENT (diagflag) ) THEN
          if (diagflag .and. do_radar_ref == 1) then
-          call calc_refl10cm (qv1d, qc1d, qr1d, nr1d, qs1d, qg1d,       &
-                      t1d, p1d, dBZ, kts, kte, i, j)
+! SRD
+!          call calc_refl10cm (qv1d, qc1d, qr1d, nr1d, qs1d, qg1d,
+!          &
+!                      t1d, p1d, dBZ, kts, kte, i, j)
+          call calc_refl10cm (qv1d, qc1d, qr1d, nr1d, qs1d, qg1d, &
+                      t1d, p1d, dBZ, kts, kte, i, j, full_melti)
+! SRD
           do k = kts, kte
              refl_10cm(i,k,j) = MAX(-35., dBZ(k))
           enddo
@@ -4811,8 +4822,13 @@
 !.. melting level interface.
 !+---+-----------------------------------------------------------------+
 
-      subroutine calc_refl10cm (qv1d, qc1d, qr1d, nr1d, qs1d, qg1d,     &
-                          t1d, p1d, dBZ, kts, kte, ii, jj)
+! SRD
+!      subroutine calc_refl10cm (qv1d, qc1d, qr1d, nr1d, qs1d, qg1d,
+!      &
+!                          t1d, p1d, dBZ, kts, kte, ii, jj)
+      subroutine calc_refl10cm (qv1d, qc1d, qr1d, nr1d, qs1d, qg1d,  &
+                          t1d, p1d, dBZ, kts, kte, ii, jj, full_melti)
+! SRD
 
       IMPLICIT NONE
 
@@ -4822,6 +4838,9 @@
                           qv1d, qc1d, qr1d, nr1d, qs1d, qg1d, t1d, p1d
       REAL, DIMENSION(kts:kte), INTENT(INOUT):: dBZ
 !     REAL, DIMENSION(kts:kte), INTENT(INOUT):: vt_dBZ
+! SRD
+      LOGICAL, INTENT(IN) :: full_melti
+! SRD
 
 !..Local variables
       REAL, DIMENSION(kts:kte):: temp, pres, qv, rho, rhof
@@ -5010,7 +5029,10 @@
 !.. routines).
 !+---+-----------------------------------------------------------------+
 
-      if (.not. iiwarm .and. melti .and. k_0.ge.2) then
+! SRD
+!      if (.not. iiwarm .and. melti .and. k_0.ge.2) then
+      if (.not. iiwarm .and. full_melti .and. melti .and. k_0.ge.2) then
+! SRD
        do k = k_0-1, kts, -1
 
 !..Reflectivity contributed by melting snow
