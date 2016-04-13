@@ -313,6 +313,7 @@ CONTAINS
                 ,UP_HELI_MAX=grid%up_heli_max                        &
                 ,UP_HELI_MIN=grid%up_heli_min                        &
                 ,UP_HELI_MAX03=grid%up_heli_max03                    &
+                ,UP_HELI_MAX01=grid%up_heli_max01                    &
                 ,RVORT1_MAX=grid%rvort1_max                          &
                 ,C_PBLH=grid%c_pblh                                  &
                 ,W_1KM_AGL=grid%w_1km_agl                            &
@@ -403,6 +404,7 @@ CONTAINS
                 ,UP_HELI_MAX=grid%up_heli_max                        &
                 ,UP_HELI_MIN=grid%up_heli_min                        &
                 ,UP_HELI_MAX03=grid%up_heli_max03                    &
+                ,UP_HELI_MAX01=grid%up_heli_max01                    &
                 ,RVORT1_MAX=grid%rvort1_max                          &
                 ,C_PBLH=grid%c_pblh                                  &
                 ,W_1KM_AGL=grid%w_1km_agl                            &
@@ -495,6 +497,7 @@ CONTAINS
                 ,UP_HELI_MAX=grid%up_heli_max                        &
                 ,UP_HELI_MIN=grid%up_heli_min                        &
                 ,UP_HELI_MAX03=grid%up_heli_max03                    &
+                ,UP_HELI_MAX01=grid%up_heli_max01                    &
                 ,RVORT1_MAX=grid%rvort1_max                          &
                 ,C_PBLH=grid%c_pblh                                  &
                 ,W_1KM_AGL=grid%w_1km_agl                            &
@@ -586,6 +589,7 @@ CONTAINS
                 ,UP_HELI_MAX=grid%up_heli_max                        &
                 ,UP_HELI_MIN=grid%up_heli_min                        &
                 ,UP_HELI_MAX03=grid%up_heli_max03                    &
+                ,UP_HELI_MAX01=grid%up_heli_max01                    &
                 ,RVORT1_MAX=grid%rvort1_max                          &
                 ,C_PBLH=grid%c_pblh                                  &
                 ,W_1KM_AGL=grid%w_1km_agl                            &
@@ -677,6 +681,7 @@ CONTAINS
                 ,UP_HELI_MAX=grid%up_heli_max                        &
                 ,UP_HELI_MIN=grid%up_heli_min                        &
                 ,UP_HELI_MAX03=grid%up_heli_max03                    &
+                ,UP_HELI_MAX01=grid%up_heli_max01                    &
                 ,RVORT1_MAX=grid%rvort1_max                          &
                 ,C_PBLH=grid%c_pblh                                  &
                 ,W_1KM_AGL=grid%w_1km_agl                            &
@@ -801,6 +806,7 @@ CONTAINS
                 ,UP_HELI_MAX=grid%up_heli_max                        &
                 ,UP_HELI_MIN=grid%up_heli_min                        &
                 ,UP_HELI_MAX03=grid%up_heli_max03                    &
+                ,UP_HELI_MAX01=grid%up_heli_max01                    &
                 ,RVORT1_MAX=grid%rvort1_max                          &
                 ,C_PBLH=grid%c_pblh                                  &
                 ,W_1KM_AGL=grid%w_1km_agl                            &
