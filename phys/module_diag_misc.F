@@ -300,7 +300,7 @@ CONTAINS
       DOUBLE PRECISION, PARAMETER:: thresh_conc = 0.001d0  ! number conc. of graupel/hail per cubic meter
                                     !KRF: Edited per GSR and G.Thompson
                                     ! 28 April. Old value 0.01d0
-i!..Factor of PI*PI/6 arises from considering a Generalized Extreme Value (GEV) distribution
+!..Factor of PI*PI/6 arises from considering a Generalized Extreme Value (GEV) distribution
       real, parameter:: gev_factor = 3.1415926536*3.1415926536/6.0
       LOGICAL:: scheme_has_graupel
       INTEGER, PARAMETER:: ngbins=50
@@ -703,10 +703,15 @@ i!..Factor of PI*PI/6 arises from considering a Generalized Extreme Value (GEV) 
           grpl_max(i,j) = grpl_colint(i,j)
        ENDIF
 
-! Calculate the max radar reflectivity between output times
+   ! Calculate the max radar reflectivity between output times
 
-       IF ( refl_10cm(i,kms,j) .GT. refd_max(i,j) ) THEN
-         refd_max(i,j) = refl_10cm(i,kms,j)
+   ! Using eta level 9 for the Spring Experiment 2016 1km level
+   ! approximation
+
+!       IF ( refl_10cm(i,kms,j) .GT. refd_max(i,j) ) THEN
+       IF ( refl_10cm(i,9,j) .GT. refd_max(i,j) ) THEN
+!         refd_max(i,j) = refl_10cm(i,kms,j)
+         refd_max(i,j) = refl_10cm(i,9,j)
        ENDIF
 
 ! Calculate the max lightning threat 2
