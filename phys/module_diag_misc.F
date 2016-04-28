@@ -300,6 +300,8 @@ CONTAINS
       DOUBLE PRECISION, PARAMETER:: thresh_conc = 0.001d0  ! number conc. of graupel/hail per cubic meter
                                     !KRF: Edited per GSR and G.Thompson
                                     ! 28 April. Old value 0.01d0
+i!..Factor of PI*PI/6 arises from considering a Generalized Extreme Value (GEV) distribution
+      real, parameter:: gev_factor = 3.1415926536*3.1415926536/6.0
       LOGICAL:: scheme_has_graupel
       INTEGER, PARAMETER:: ngbins=50
       DOUBLE PRECISION, DIMENSION(ngbins+1):: xxDx
@@ -309,7 +311,7 @@ CONTAINS
       DOUBLE PRECISION:: f_d, sum_ng, lamg, ilamg, N0_g, lam_exp, N0exp
       DOUBLE PRECISION:: lamr, N0min
       REAL:: mvd_r, xslw1, ygra1, zans1
-      INTEGER:: ng, n
+      INTEGER:: ng, n, k_0
 
 !-----------------------------------------------------------------
 ! Handle accumulations with buckets to prevent round-off truncation in long runs
@@ -1068,12 +1070,16 @@ CONTAINS
        DO j=j_start(ij),j_end(ij)
        DO i=i_start(ij),i_end(ij)
         N0min = 1.E6
+        k_0 = kms
+        do k = kme-1, kms, -1
+         if (temp(i,k,j).ge.270.65) k_0 = MAX(k_0, k)
+        enddo
         DO k=kme-1, kms, -1
-         if (temp_qg(i,k,j) .LT. 1.E-6) CYCLE
+!        if (temp_qg(i,k,j) .LT. 1.E-6) CYCLE
          lamr = (1000.0*3.1415926536/6.0*cgg(3)/cgg(2)*temp_nr(i,k,j)/temp_qr(i,k,j))**(1./3.)
          mvd_r = 3.672 / lamr   ! Technically this should have (+mu_r)
          mvd_r = MAX(100.E-6, MIN(mvd_r, 2.5E-3))
-         if (temp(i,k,j).lt.270.65 .and. mvd_r.gt.100.E-6) then
+         if (k.gt.k_0 .and. mvd_r.gt.100.E-6) then
             xslw1 = 4.01 + alog10(mvd_r)
          else
             xslw1 = 0.01
@@ -1217,9 +1223,9 @@ CONTAINS
               endif
            enddo
            if (ng .ge. ngbins) then
-              hail_max = xxDg(ngbins)
+              hail_max = xxDg(ngbins)*gev_factor
            elseif (xxDg(ng+1) .gt. 1.E-3) then
-              hail_max = xxDg(ng+1)
+              hail_max = xxDg(ng+1)*gev_factor
            else
               hail_max = 1.E-4
            endif
